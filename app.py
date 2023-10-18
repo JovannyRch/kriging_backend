@@ -29,6 +29,15 @@ def get_semivariogram():
     lats = np.array(data["lats"])
     values = np.array(data["values"])
 
+    print("==== LONS ====")
+    print(lons)
+
+    print("\n\n==== LATS ====")
+    print(lats)
+
+    print("\n\n==== VALUES ====")
+    print(values)
+
     OK = OrdinaryKriging(lons, lats, values, variogram_model='spherical')
 
     plt.plot(OK.lags, OK.semivariance, '-o')
@@ -38,6 +47,11 @@ def get_semivariogram():
     
     fileName = generate_unique_filename()
     semivariogram_path = os.path.join("static", fileName)
+
+    if not os.path.isdir("static"):
+        os.mkdir("static")
+
+
     plt.savefig(semivariogram_path)
     
 
