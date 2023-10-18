@@ -17,6 +17,11 @@ def generate_unique_filename(extension=".png"):
 
 app = Flask(__name__)
 
+
+@app.route('/health', methods=['GET'])  
+def health():
+    return jsonify({"status": "ok"})
+
 @app.route('/semivariogram', methods=['POST'])
 def get_semivariogram():
     data = request.json
