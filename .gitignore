@@ -25,3 +25,4 @@ htmlcov/
 myenv
 *,cover
 *.png
+__pycache__/*
