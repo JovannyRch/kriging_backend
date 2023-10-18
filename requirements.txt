@@ -1,0 +1,6 @@
+flask
+uuid
+numpy
+matplotlib
+geopandas
+pykrige
