@@ -1,2 +1,2 @@
-pip install uuid flask matplotlib seaborn pykrige geopandas
+pip install -r requirements.txt
 mkdir static

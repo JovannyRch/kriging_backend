@@ -8,8 +8,8 @@ import numpy as np
 import os
 import uuid
 plt.style.use('ggplot')
-import base64
-from io import BytesIO
+""" import base64
+from io import BytesIO """
 
 
 def generate_unique_filename(extension=".png"):
