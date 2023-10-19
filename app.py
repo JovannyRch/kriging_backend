@@ -30,13 +30,13 @@ def get_semivariogram():
     values = np.array(data["values"])
 
     print("==== LONS ====")
-    print(lons)
+    print(lons.tolist())
 
     print("\n\n==== LATS ====")
-    print(lats)
+    print(lats.tolist())
 
     print("\n\n==== VALUES ====")
-    print(values)
+    print(values.tolist())
 
     OK = OrdinaryKriging(lons, lats, values, variogram_model='spherical')
 
