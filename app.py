@@ -8,8 +8,8 @@ import numpy as np
 import os
 import uuid
 plt.style.use('ggplot')
-""" import base64
-from io import BytesIO """
+import base64
+from io import BytesIO
 
 
 def generate_unique_filename(extension=".png"):
@@ -44,25 +44,16 @@ def get_semivariogram():
     plt.title('Semivariograma')
     plt.xlabel('Distancia')
     plt.ylabel('Semivarianza')
-    
-    fileName = generate_unique_filename()
-    semivariogram_path = os.path.join("static", fileName)
+      
 
-    if not os.path.isdir("static"):
-        os.mkdir("static")
-
-
-    plt.savefig(semivariogram_path)
-    
-
-    """  buf = BytesIO()
+    buf = BytesIO()
     plt.savefig(buf, format='png')
     buf.seek(0)
     
-    image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8') """
+    image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
 
 
-    return jsonify({"hs": OK.lags.tolist(), "semivariograms": OK.semivariance.tolist(), "image_url": fileName})
+    return jsonify({"hs": OK.lags.tolist(), "semivariograms": OK.semivariance.tolist(), "image_base64": image_base64})
 
 
 if __name__ == '__main__':
