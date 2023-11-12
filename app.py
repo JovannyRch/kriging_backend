@@ -251,6 +251,73 @@ def get_semivariogram():
     return jsonify(response)
 
 
+@app.route('/generate_contour', methods=['POST'])
+def generate_contour():
+    data = request.get_json()
+
+    points = np.array(data["points"])
+    variogram_model = data.get('variogram_model', 'linear')
+    model_params = data.get('model_params', None)
+    grid_space = data.get('grid_space')
+
+    if data.get('testing', False):
+        points = np.array(testing_points)
+
+    lons = points[:, 0]
+    lats = points[:, 1]
+    values = points[:, 2]
+
+    if model_params and variogram_model == 'linear':
+        model_params['slope'] = (
+            model_params['sill'] - model_params['nugget']) / model_params['range']
+        del model_params['sill']
+        del model_params['range']
+
+    if not grid_space:
+        lon_range = np.max(lons) - np.min(lons)
+        lat_range = np.max(lats) - np.min(lats)
+        # Establece un valor predeterminado como un porcentaje del rango (por ejemplo, 1% del rango total)
+        grid_space = max(lon_range, lat_range) * 0.01
+
+    # Crea una grilla regular sobre el dominio de los datos
+    grid_lon = np.arange(np.min(lons), np.max(lons), grid_space)
+    grid_lat = np.arange(np.min(lats), np.max(lats), grid_space)
+
+    # Crea una instancia de OrdinaryKriging con los parámetros del modelo seleccionados
+    OK = OrdinaryKriging(
+        lons, lats, values,
+        variogram_model=variogram_model,
+        variogram_parameters=model_params
+    )
+
+    # Realiza la kriging sobre la grilla definida
+    z, ss = OK.execute('grid', grid_lon, grid_lat)
+
+    # Genera el mapa de contornos usando los resultados de kriging
+    X, Y = np.meshgrid(grid_lon, grid_lat)
+    Z = z.reshape(X.shape)
+
+    plt.figure(figsize=(10, 8))
+    contour = plt.contourf(X, Y, Z, cmap='magma', levels=50)
+    plt.colorbar(contour)
+    plt.title('Mapa de Contornos de Kriging')
+    plt.xlabel('Longitud')
+    plt.ylabel('Latitud')
+    # Marca los puntos de datos originales
+    plt.scatter(lons, lats, c='red', marker='o')
+
+    # Guarda la figura en un buffer en lugar de en un archivo
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
+    plt.close()
+    buf.seek(0)
+
+    # Codifica la imagen para enviar en base64
+    image_base64 = base64.b64encode(buf.read()).decode('utf-8')
+
+    return jsonify({'image_base64': image_base64})
+
+
 @app.route('/kriging_contour', methods=['POST'])
 def get_kriging_contour():
     data = request.json
