@@ -206,8 +206,15 @@ def get_semivariogram():
     values = points[:, 2]
 
     # Define los rangos de la grilla basados en los datos de entrada
-    gridx = np.linspace(min(lons), max(lons), 100)
-    gridy = np.linspace(min(lats), max(lats), 100)
+    lon_range = np.max(lons) - np.min(lons)
+    lat_range = np.max(lats) - np.min(lats)
+    grid_space = max(lon_range, lat_range) * 0.01
+
+    gridx = np.arange(np.min(lons), np.max(lons), grid_space)
+    gridy = np.arange(np.min(lats), np.max(lats), grid_space)
+
+    print("gridx: ", gridx, len(gridx))
+    print("gridy: ", gridy, len(gridy))
 
     # Convertir listas a arrays de numpy para usar en PyKrige
     lons = np.array(lons)
@@ -259,12 +266,13 @@ def generate_contour():
     variogram_model = data.get('variogram_model', 'linear')
     model_params = data.get('model_params', None)
     grid_space = data.get('grid_space')
+    is_utm = data.get('coordinates', 'latlng') == 'utm'
 
     if data.get('testing', False):
         points = np.array(testing_points)
 
-    lons = points[:, 0]
-    lats = points[:, 1]
+    lons = points[:, 0]  # if is_utm this is easting
+    lats = points[:, 1]  # if is_utm this is northing
     values = points[:, 2]
 
     if model_params and variogram_model == 'linear':
@@ -276,7 +284,6 @@ def generate_contour():
     if not grid_space:
         lon_range = np.max(lons) - np.min(lons)
         lat_range = np.max(lats) - np.min(lats)
-        # Establece un valor predeterminado como un porcentaje del rango (por ejemplo, 1% del rango total)
         grid_space = max(lon_range, lat_range) * 0.01
 
     # Crea una grilla regular sobre el dominio de los datos
@@ -298,11 +305,13 @@ def generate_contour():
     Z = z.reshape(X.shape)
 
     plt.figure(figsize=(10, 8))
-    contour = plt.contourf(X, Y, Z, cmap='magma', levels=50)
+    contour = plt.contourf(X, Y, Z, cmap='jet', levels=50)
     plt.colorbar(contour)
     plt.title('Mapa de Contornos de Kriging')
-    plt.xlabel('Longitud')
-    plt.ylabel('Latitud')
+    xLabel = is_utm and 'Este' or 'Longitud'
+    yLabel = is_utm and 'Norte' or 'Latitud'
+    plt.xlabel(xLabel)
+    plt.ylabel(yLabel)
     # Marca los puntos de datos originales
     plt.scatter(lons, lats, c='red', marker='o')
 
