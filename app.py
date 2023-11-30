@@ -1,4 +1,5 @@
 
+from skgstat import Variogram
 from flask_cors import CORS
 from io import BytesIO
 import base64
@@ -193,65 +194,47 @@ def health():
 def get_semivariogram():
     # Recibe los datos en formato JSON desde Flutter
     data = request.get_json()
-    variogram_model = data.get('variogram_model', 'linear')
-    # Add testing flag, if true, then use test data calling getPoints() function
+    variogram_model = data.get('variogram_model', 'spherical')
+    n_lags = data.get('n_lags', 13)
 
     points = np.array(data["points"])
 
     if data.get('testing', False):
         points = np.array(testing_points)
 
-    lons = points[:, 0]
-    lats = points[:, 1]
+    # Separar las coordenadas y los valores
+    coordinates = points[:, 0:2]
     values = points[:, 2]
 
-    # Define los rangos de la grilla basados en los datos de entrada
-    lon_range = np.max(lons) - np.min(lons)
-    lat_range = np.max(lats) - np.min(lats)
-    grid_space = max(lon_range, lat_range) * 0.01
+    # Crear el objeto Variogram
+    V = Variogram(coordinates, values, model=variogram_model,
+                  fit_method=None, n_lags=n_lags)
 
-    gridx = np.arange(np.min(lons), np.max(lons), grid_space)
-    gridy = np.arange(np.min(lats), np.max(lats), grid_space)
+    # Calculamos manualmente los bines y valores de semivarianza
+    bins = V.bins
+    experimental_semivariance = V.experimental
 
-    print("gridx: ", gridx, len(gridx))
-    print("gridy: ", gridy, len(gridy))
-
-    # Convertir listas a arrays de numpy para usar en PyKrige
-    lons = np.array(lons)
-    lats = np.array(lats)
-    values = np.array(values)
-
-    # Crea un objeto OrdinaryKriging con los datos y un modelo de variograma lineal
-    OK = OrdinaryKriging(lons, lats, values, variogram_model=variogram_model)
-
-    # Realiza la kriging en una grilla definida (esto es solo un ejemplo, necesitarás definir tu grilla)
-    z, ss = OK.execute('grid', gridx, gridy)
-
-    # Ahora puedes acceder a los lags y la semivarianza directamente
-    lags = OK.lags
-    semivariance = OK.semivariance
-
-    # Grafica el semivariograma
-    plt.figure()
-    plt.plot(lags, semivariance, 'o-')
+    # Graficar el semivariograma experimental
+    plt.figure(figsize=(6, 4))
+    plt.plot(bins, experimental_semivariance, 'o-')
     plt.title('Semivariograma Experimental')
-    plt.xlabel('Lag [unidad de distancia]')
+    plt.xlabel('Distancia')
     plt.ylabel('Semivarianza')
     plt.grid(True)
+    plt.show()
 
-    # Guarda la grafica en un buffer en memoria
-    buffer = BytesIO()
-    plt.savefig(buffer, format='png')
-    buffer.seek(0)
+    # Guarda la figura en un buffer en lugar de en un archivo
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
     plt.close()
+    buf.seek(0)
 
-    # Codifica la imagen en base64 para transferirla como JSON
-    image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    # Codifica la imagen para enviar en base64
+    image_base64 = base64.b64encode(buf.read()).decode('utf-8')
 
-    # Devuelve la imagen en base64 junto con los datos de lags y semivarianza
     response = {
-        'lags': OK.lags.tolist(),
-        'semivariance': OK.semivariance.tolist(),
+        'lags': bins.tolist(),
+        'semivariance': experimental_semivariance.tolist(),
         'image_base64': image_base64
     }
 
