@@ -199,6 +199,12 @@ def get_semivariogram():
 
     points = np.array(data["points"])
 
+    print("---" * 10)
+    print('Variogram model:', variogram_model)
+    print(points)
+
+    print("---" * 10)
+
     if data.get('testing', False):
         points = np.array(testing_points)
 
