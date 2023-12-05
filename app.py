@@ -214,7 +214,8 @@ def get_semivariogram():
 
     # Crear el objeto Variogram
     V = Variogram(coordinates, values, model=variogram_model,
-                  fit_method=None, n_lags=n_lags)
+                  fit_method=None, n_lags=n_lags,
+                  maxlag=50)
 
     # Calculamos manualmente los bines y valores de semivarianza
     bins = V.bins
@@ -256,6 +257,7 @@ def generate_contour():
     model_params = data.get('model_params', None)
     grid_space = data.get('grid_space')
     is_utm = data.get('coordinates', 'latlng') == 'utm'
+    nlags = data.get('nlags', 13)
 
     if data.get('testing', False):
         points = np.array(testing_points)
@@ -283,7 +285,10 @@ def generate_contour():
     OK = OrdinaryKriging(
         lons, lats, values,
         variogram_model=variogram_model,
-        variogram_parameters=model_params
+        variogram_parameters=model_params,
+        nlags=nlags,
+        coordinates_type='euclidean' if is_utm else 'geographic',
+        verbose=True
     )
 
     # Realiza la kriging sobre la grilla definida
@@ -352,3 +357,61 @@ def getPoints():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+""" 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[
+    [20.5958218, -100.3412843, 28.2],
+    [20.5953995, -100.3420983, 28.6],
+    [20.595551, -100.3413033, 16.8],
+    [20.5968874, -100.3427943, 17.8],
+    [20.5975481, -100.3363917, 17.6],
+    [20.5942038, -100.3405744, 22.4],
+    [20.595551, -100.3413033, 27.7],
+    [20.5951775, -100.3396479, 22.6],
+    [20.59565, -100.3412083, 25.9],
+    [20.5965882, -100.3384912, 14.8],
+    [20.5965784, -100.3384853, 22.4],
+    [20.6007563, -100.3390777, 21.9],
+    [20.5972327, -100.3387707,  22],
+    [20.5970135, -100.3412704, 16.9],
+    [20.5973858, -100.341391, 23.8],
+    [20.6000873, -100.3394943, 27.7],
+    [20.5990706, -100.3412689, 17],
+]
+
+[
+    [4, 3, 28.2],
+    [12, 23, 28.6],
+    [10, 12, 16.8],
+    [8, 4, 17.8],
+    [9, 2, 17.6],
+    [5, 6, 22.4],
+    [7, 8, 22.6],
+    [10, 3, 25.9],
+    [11, 5, 14.8],
+    [12, 12, 21.9],
+    [9, 5,  22],
+    [9, 12, 16.9],
+    [12, 4, 27.7],
+]
+
+ """
