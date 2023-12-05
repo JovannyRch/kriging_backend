@@ -213,8 +213,9 @@ def get_semivariogram():
     values = points[:, 2]
 
     # Crear el objeto Variogram
-    V = Variogram(coordinates, values, model=variogram_model,
-                  fit_method=None, n_lags=n_lags)
+
+    V = Variogram(coordinates, values, model=variogram_model, maxlag='median',
+                  n_lags=n_lags, normalize=False, verbose=False)
 
     # Calculamos manualmente los bines y valores de semivarianza
     bins = V.bins
