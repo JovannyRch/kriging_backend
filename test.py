@@ -24,7 +24,7 @@ def interpolate(V, ax):
 
 
 # Leer los datos del archivo
-data = np.loadtxt('5_san_gaspar.txt')
+data = np.loadtxt('queretaro.txt')
 
 # Separar las coordenadas y los valores
 coordinates = data[:, 0:2]
@@ -38,6 +38,15 @@ plot_scatter(coordinates, values, axes[0])
 V = Variogram(coordinates, values, maxlag='median',
               n_lags=5, normalize=False, verbose=True, model='spherical')
 V.plot(show=False)
+
+# Print model variogram values
+print(V)
+print(V.parameters)
+[range, sill, nugget] = V.parameters
+
+print("range: ", range)
+print("sill: ", sill)
+print("nugget: ", nugget)
 
 
 fields = []
@@ -63,3 +72,11 @@ plt.xlabel('Distancia')
 plt.ylabel('Semivarianza')
 plt.grid(True) """
 plt.show()
+
+
+""" 
+
+    Incio Ajuste -> Semivariograma Experimental
+    Ajuste de modelo -> Semivariograma Teórico
+
+ """
