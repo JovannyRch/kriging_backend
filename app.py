@@ -45,42 +45,8 @@ def get_semivariogram():
     coordinates = points[:, 0:2]
     values = points[:, 2]
 
-    # Crear el objeto Variogram
-
-    V = Variogram(coordinates, values, model=variogram_model, maxlag='median',
-                  n_lags=n_lags, normalize=False, verbose=False)
-    [range_val, sill, nugget] = V.parameters
-
-    # Calculamos manualmente los bines y valores de semivarianza
-    bins = V.bins
-    experimental_semivariance = V.experimental
-
-    # Graficar el semivariograma experimental
-    plt.figure(figsize=(6, 4))
-    plt.plot(bins, experimental_semivariance, 'o-')
-    plt.title('Semivariograma Experimental')
-    plt.xlabel('Distancia')
-    plt.ylabel('Semivarianza')
-    plt.grid(True)
-    plt.show()
-
-    # Guarda la figura en un buffer en lugar de en un archivo
-    buf = BytesIO()
-    plt.savefig(buf, format='png')
-    plt.close()
-    buf.seek(0)
-
-    # Codifica la imagen para enviar en base64
-    image_base64 = base64.b64encode(buf.read()).decode('utf-8')
-
-    response = {
-        'lags': bins.tolist(),
-        'semivariance': experimental_semivariance.tolist(),
-        'image_base64': image_base64,
-        'range': range_val,
-        'sill': sill,
-        'nugget': nugget
-    }
+    response = data_processing.get_semivariogram(
+        coordinates, values, variogram_model, n_lags)
 
     return jsonify(response)
 
