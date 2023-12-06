@@ -199,12 +199,6 @@ def get_semivariogram():
 
     points = np.array(data["points"])
 
-    print("---" * 10)
-    print('Variogram model:', variogram_model)
-    print(points)
-
-    print("---" * 10)
-
     if data.get('testing', False):
         points = np.array(testing_points)
 
@@ -216,6 +210,7 @@ def get_semivariogram():
 
     V = Variogram(coordinates, values, model=variogram_model, maxlag='median',
                   n_lags=n_lags, normalize=False, verbose=False)
+    [range_val, sill, nugget] = V.parameters
 
     # Calculamos manualmente los bines y valores de semivarianza
     bins = V.bins
@@ -242,7 +237,10 @@ def get_semivariogram():
     response = {
         'lags': bins.tolist(),
         'semivariance': experimental_semivariance.tolist(),
-        'image_base64': image_base64
+        'image_base64': image_base64,
+        'range': range_val,
+        'sill': sill,
+        'nugget': nugget
     }
 
     return jsonify(response)
