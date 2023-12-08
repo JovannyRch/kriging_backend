@@ -39,7 +39,7 @@ def get_semivariogram():
     points = np.array(data["points"])
 
     if data.get('testing', False):
-        points = np.array(testing_points)
+        points = np.loadtxt('3_san_gaspar.txt')
 
     # Separar las coordenadas y los valores
     coordinates = points[:, 0:2]
@@ -47,6 +47,33 @@ def get_semivariogram():
 
     response = data_processing.get_semivariogram(
         coordinates, values, variogram_model, n_lags)
+
+    return jsonify(response)
+
+# Add custom semivariogram
+
+
+@app.route('/custom_semivariogram', methods=['POST'])
+def get_custom_semivariogram():
+    # Recibe los datos en formato JSON desde Flutter
+    data = request.get_json()
+    variogram_model = data.get('variogram_model', 'spherical')
+    n_lags = data.get('n_lags', 13)
+    sill = data.get('sill', 1)
+    nugget = data.get('nugget', 0)
+    range_val = data.get('range', 1)
+
+    points = np.array(data["points"])
+
+    if data.get('testing', False):
+        points = np.loadtxt('3_san_gaspar.txt')
+
+    # Separar las coordenadas y los valores
+    coordinates = points[:, 0:2]
+    values = points[:, 2]
+
+    response = data_processing.get_custom_semivariogram(
+        coordinates, values, variogram_model, n_lags, range_val, sill, nugget, True)
 
     return jsonify(response)
 

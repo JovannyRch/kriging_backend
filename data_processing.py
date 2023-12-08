@@ -49,5 +49,40 @@ def get_semivariogram(coordinates, values, model='spherical', n_lags=10):
         'image_base64': image_base64,
         'range': range_val,
         'sill': sill,
-        'nugget': nugget
+        'nugget': nugget,
+        'model': model
+    }
+
+# coordinates, values, variogram_model, n_lags, range_val, sill, nugget
+
+
+def get_custom_semivariogram(coordinates, values, model='spherical', n_lags=10,
+                             range_val=None, sill=None, nugget=None, manual_fit=False):
+    # Configurar el método de ajuste y los parámetros
+    fit_method = 'manual' if manual_fit else None
+
+    # Crear el objeto Variogram
+    V = Variogram(coordinates, values, maxlag='median', n_lags=n_lags,
+                  normalize=False, verbose=True, model=model,
+                  fit_method=fit_method,
+                  fit_range=range_val, fit_sill=sill, fit_nugget=nugget)
+
+    # Ejecutar el ajuste manual si es necesario
+    if manual_fit:
+        V.fit()
+
+    V.plot(show=False)
+    image_base64 = get_image(plt)
+
+    # Obtener los parámetros del semivariograma, ya sea ajustados automáticamente o manualmente
+    [range_val, sill, nugget] = V.parameters
+
+    return {
+        'lags': V.bins.tolist(),
+        'semivariance': V.experimental.tolist(),
+        'image_base64': image_base64,
+        'range': range_val,
+        'sill': sill,
+        'nugget': nugget,
+        'model': model
     }
