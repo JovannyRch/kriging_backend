@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import base64
 from io import BytesIO
-from skgstat import Variogram
+from skgstat import Variogram, OrdinaryKriging
 
 
 def get_image(plt, format='png'):
@@ -57,7 +57,7 @@ def get_semivariogram(coordinates, values, model='spherical', n_lags=10):
 
 
 def get_custom_semivariogram(coordinates, values, model='spherical', n_lags=10,
-                             range_val=None, sill=None, nugget=None, manual_fit=False):
+                             range_val=None, sill=None, nugget=None, manual_fit=False, return_obj=False):
     # Configurar el método de ajuste y los parámetros
     fit_method = 'manual' if manual_fit else None
 
@@ -70,6 +70,9 @@ def get_custom_semivariogram(coordinates, values, model='spherical', n_lags=10,
     # Ejecutar el ajuste manual si es necesario
     if manual_fit:
         V.fit()
+
+    if return_obj:
+        return V
 
     V.plot(show=False)
     image_base64 = get_image(plt)
@@ -85,4 +88,41 @@ def get_custom_semivariogram(coordinates, values, model='spherical', n_lags=10,
         'sill': sill,
         'nugget': nugget,
         'model': model
+    }
+
+
+def interpolate(V, xx, yy):
+
+    ok = OrdinaryKriging(V, min_points=5, max_points=15, mode='exact')
+
+    # return base 64 image
+    field = ok.transform(xx.flatten(), yy.flatten()).reshape(xx.shape)
+    fig, ax = plt.subplots()
+    art = ax.matshow(field, origin='lower', cmap='jet',
+                     vmin=V.values.min(), vmax=V.values.max())
+
+    plt.colorbar(art, ax=ax)
+    image_base64 = get_image(plt)
+    return image_base64
+
+
+def get_contour_map(coordinates, values, model='spherical', n_lags=10,
+                    range_val=None, sill=None, nugget=None):
+
+    xs = coordinates[:, 0]
+    ys = coordinates[:, 1]
+
+    xx, yy = np.mgrid[np.min(xs):np.max(xs):100j,
+                      np.min(ys):np.max(ys):100j]
+
+    V = get_custom_semivariogram(
+        coordinates, values, model, n_lags, range_val, sill, nugget, True, True)
+
+    # print parameters
+    print(V.parameters)
+
+    image_base64 = interpolate(V, xx, yy)
+
+    return {
+        'image_base64': image_base64
     }

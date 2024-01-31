@@ -39,7 +39,7 @@ def get_semivariogram():
     points = np.array(data["points"])
 
     if data.get('testing', False):
-        points = np.loadtxt('3_san_gaspar.txt')
+        points = np.loadtxt('testing_points.txt')
 
     # Separar las coordenadas y los valores
     coordinates = points[:, 0:2]
@@ -66,7 +66,7 @@ def get_custom_semivariogram():
     points = np.array(data["points"])
 
     if data.get('testing', False):
-        points = np.loadtxt('3_san_gaspar.txt')
+        points = np.loadtxt('testing_points.txt')
 
     # Separar las coordenadas y los valores
     coordinates = points[:, 0:2]
@@ -84,7 +84,7 @@ def get_scatter():
     points = np.array(data["points"])
 
     if data.get('testing', False):
-        points = np.array(testing_points)
+        points = np.loadtxt('testing_points.txt')
 
     coordinates = points[:, 0:2]
     values = points[:, 2]
@@ -105,7 +105,7 @@ def generate_contour():
     is_utm = data.get('coordinates', 'latlng') == 'utm'
 
     if data.get('testing', False):
-        points = np.array(testing_points)
+        points = np.loadtxt('testing_points.txt')
 
     lons = points[:, 0]  # if is_utm this is easting
     lats = points[:, 1]  # if is_utm this is northing
@@ -163,8 +163,33 @@ def generate_contour():
     return jsonify({'image_base64': image_base64})
 
 
+@app.route('/generate_heatmap', methods=['POST'])
+def generate_heatmap():
+    data = request.get_json()
+
+    variogram_model = data.get('variogram_model', 'spherical')
+    n_lags = data.get('n_lags', 13)
+    sill = data.get('sill', 1)
+    nugget = data.get('nugget', 0)
+    range_val = data.get('range', 1)
+
+    points = np.array(data["points"])
+
+    if data.get('testing', False):
+        points = np.loadtxt('testing_points.txt')
+
+    values = points[:, 2]
+    coordinates = points[:, 0:2]
+
+    response = data_processing.get_contour_map(
+        coordinates, values, variogram_model, n_lags, range_val, sill, nugget)
+
+    return jsonify(response)
+
+
 @app.route('/points', methods=['GET'])
 def getPoints():
+    testing_points = np.loadtxt('testing_points.txt')
     return jsonify({"points": testing_points})
 
 
