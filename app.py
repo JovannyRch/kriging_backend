@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from pykrige.ok import OrdinaryKriging
 from flask import Flask, jsonify, request
 import matplotlib
-
+from matplotlib.colors import LinearSegmentedColormap
 import const
 import data_processing
 
@@ -140,6 +140,23 @@ def generate_contour():
     # Realiza la kriging sobre la grilla definida
     z, ss = OK.execute('grid', grid_lon, grid_lat)
 
+    # Genera el mapa de contornos usando los resultados de kriging
+    X, Y = np.meshgrid(grid_lon, grid_lat)
+    Z = z.reshape(X.shape)
+
+    cmap_colors = [(1, 1, 1), (0, 0, 1), (0, 0, 1), (1, 0, 0), (1, 0, 0)]
+
+    cmap_positions = [0, 0.35, 0.5, 0.75, 1]
+
+    # Crear el LinearSegmentedColormap
+    custom_cmap = LinearSegmentedColormap.from_list(
+        "custom_cmap", list(zip(cmap_positions, cmap_colors)))
+
+    # Generar el mapa de contornos
+    plt.figure(figsize=(10, 8))
+    contour = plt.contourf(X, Y, Z, cmap=custom_cmap, levels=50)
+    plt.colorbar(contour)
+
     # Porcentaje de infestacion
     infested_points = np.sum(z > 0)
     total_points = z.size
@@ -147,15 +164,8 @@ def generate_contour():
     # Calcular el porcentaje de infestación
     percentage_infested = 100 - ((infested_points / total_points) * 100)
 
-    # Genera el mapa de contornos usando los resultados de kriging
-    X, Y = np.meshgrid(grid_lon, grid_lat)
-    Z = z.reshape(X.shape)
-
-    plt.figure(figsize=(10, 8))
-    contour = plt.contourf(X, Y, Z, cmap='jet', levels=50)
-    plt.colorbar(contour)
-
-    plt.title(f'Porcentaje libre de incidencias: {percentage_infested:.2f}%')
+    plt.title(
+        f'Porcentaje de superficie no infestada/infectada: {percentage_infested:.2f}%')
 
     xLabel = is_utm and 'Este' or 'Longitud'
     yLabel = is_utm and 'Norte' or 'Latitud'
