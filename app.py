@@ -48,6 +48,10 @@ def get_semivariogram():
     response = data_processing.get_semivariogram(
         coordinates, values, variogram_model, n_lags)
 
+    for i in range(len(response['semivariance'])):
+        if np.isnan(response['semivariance'][i]):
+            response['semivariance'][i] = 0
+
     return jsonify(response)
 
 # Add custom semivariogram
