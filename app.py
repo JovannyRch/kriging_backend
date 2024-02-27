@@ -140,6 +140,13 @@ def generate_contour():
     # Realiza la kriging sobre la grilla definida
     z, ss = OK.execute('grid', grid_lon, grid_lat)
 
+    # Porcentaje de infestacion
+    infested_points = np.sum(z > 0)
+    total_points = z.size
+
+    # Calcular el porcentaje de infestación
+    percentage_infested = (infested_points / total_points) * 100
+
     # Genera el mapa de contornos usando los resultados de kriging
     X, Y = np.meshgrid(grid_lon, grid_lat)
     Z = z.reshape(X.shape)
@@ -147,7 +154,9 @@ def generate_contour():
     plt.figure(figsize=(10, 8))
     contour = plt.contourf(X, Y, Z, cmap='jet', levels=50)
     plt.colorbar(contour)
-    plt.title('Mapa de Contornos de Kriging')
+
+    plt.title(f'Porcentaje de infestación: {percentage_infested:.2f}%')
+
     xLabel = is_utm and 'Este' or 'Longitud'
     yLabel = is_utm and 'Norte' or 'Latitud'
     plt.xlabel(xLabel)
