@@ -107,6 +107,10 @@ def generate_contour():
     model_params = data.get('model_params', None)
     grid_space = data.get('grid_space')
     is_utm = data.get('coordinates', 'latlng') == 'utm'
+    graph_title = data.get(
+        'graph_title', 'Porcentaje de no infestación: ')
+
+    show_percentage = data.get('show_percentage', True)
 
     if data.get('testing', False):
         points = np.array(testing_points)
@@ -164,8 +168,10 @@ def generate_contour():
     # Calcular el porcentaje de infestación
     percentage_infested = 100 - ((infested_points / total_points) * 100)
 
-    plt.title(
-        f'Porcentaje de superficie no infestada/infectada: {percentage_infested:.2f}%')
+    if show_percentage:
+        plt.title(f'{graph_title}{percentage_infested:.2f}%')
+    elif graph_title:
+        plt.title(graph_title)
 
     xLabel = is_utm and 'Este' or 'Longitud'
     yLabel = is_utm and 'Norte' or 'Latitud'
